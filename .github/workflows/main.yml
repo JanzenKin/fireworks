@@ -3,9 +3,12 @@ jobs:
   job1:
     runs-on: ubuntu-latest
     steps:
-    - run: pwd
-    - run: ls
-  job2:
-    runs-on: windows-latest
-    steps:
-    - run: node --version
+    - name: 读取仓库内容
+      uses: actions/checkout@v4
+
+    - name: 部署
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: gh-pages
+        folder: .
+
