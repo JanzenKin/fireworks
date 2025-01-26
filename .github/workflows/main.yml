@@ -6,9 +6,19 @@ jobs:
     - name: 读取仓库内容
       uses: actions/checkout@v4
 
-    - name: 部署
-      uses: JamesIves/github-pages-deploy-action@v4
+    - name: 部署自有服务器copy file via ssh password
+      uses: appleboy/scp-action@v0.0.1
       with:
-        branch: gh-pages
-        folder: .
+        host: ${{ secrets.REMOTE_HOST }}
+        username: ${{ secrets.REMOTE_USER }}
+        password: ${{ secrets.REMOTE_PASSWORD }}
+        port: 22
+        source: "."
+        target: "fireworks"
+  # 部署github gh-pages
+    # - name: 部署
+    #   uses: JamesIves/github-pages-deploy-action@v4
+    #   with:
+    #     branch: gh-pages
+    #     folder: .
 
