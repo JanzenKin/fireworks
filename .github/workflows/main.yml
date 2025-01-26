@@ -13,8 +13,8 @@ jobs:
         username: ${{ secrets.REMOTE_USER }}
         password: ${{ secrets.REMOTE_PASSWORD }}
         port: 22
-        source: "."
-        target: "fireworks"
+        source: .
+        target: /root/fireworks
   # 部署github gh-pages
     # - name: 部署
     #   uses: JamesIves/github-pages-deploy-action@v4
