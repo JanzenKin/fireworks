@@ -150,7 +150,7 @@ const store = {
 				? "3" // Desktop default
 				: IS_HEADER
 				? "1.2" //配置文件头默认值(不必是int)
-				: "3", //手机默认
+				: "2", //手机默认
 			wordShell: true, //文字烟花 默认为开启 若不开启可修改为false
 			autoLaunch: true, //自动发射烟花
 			finale: true, //同时放更多烟花
@@ -545,11 +545,23 @@ appNodes.shareBtn.addEventListener("click", ()=> {
 		else shareUrl += `${key}=${config[key]}&`;
 	})
 	shareUrl = shareUrl.slice(0, shareUrl.length - 1);
-	navigator.clipboard.writeText(shareUrl).then(() => {
-		alert('分享链接已经生成并保存到剪切板！');
-	}).catch((err) => {
-		alert('复制失败: ' + err);
-	});
+	if (navigator.clipboard) {
+		// 使用 Clipboard API 将文本复制到剪切板
+		navigator.clipboard.writeText(shareUrl).then(() => {
+		  alert('内容已复制到剪切板！');
+		}).catch((err) => {
+		  alert('复制失败: ' + err);
+		});
+	  } else {
+		// 如果不支持 Clipboard API，使用 document.execCommand() 作为回退
+		const textArea = document.createElement('textarea');
+		textArea.value = shareUrl;
+		document.body.appendChild(textArea);
+		textArea.select();
+		document.execCommand('copy');
+		document.body.removeChild(textArea);
+		alert('内容已复制到剪切板！');
+	  }
 })
 appNodes.settingsBtn.addEventListener("click", () => toggleMenu());
 appNodes.closeMenuBtn.addEventListener("click", () => toggleMenu(false));
