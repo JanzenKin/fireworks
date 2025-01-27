@@ -118,7 +118,7 @@ fscreen.addEventListener("fullscreenchange", () => {
 	store.setState({ fullscreen: isFullscreen() });
 });
 
-let randomWords = ["蛇年快乐", "心想事成"]// 文字烟花(默认值)
+let randomWords = ["蛇龙得水", "瑞蛇献福", "万事如意"]// 文字烟花(默认值)
 const params = new URLSearchParams(window.location.search); 
 if(params.size > 0){
 	randomWords = decodeURIComponent(params.get("text")).split('|').map(t=> t.trim())
@@ -332,7 +332,7 @@ const storeConfig = () => store.state.config;
 const helpContent = {
 	shellText: {
 		header: "烟花名称",
-		body: "输入美好的祝福，格式“蛇年呈瑞|愿君心想皆成”,分割符为“|”。",	
+		body: "输入美好的祝福，格式“蛇龙得水|瑞蛇献福|万事如意”,分割符为“|”。",	
 	},
 	shellType: {
 		header: "烟花类型",
@@ -548,7 +548,7 @@ appNodes.shareBtn.addEventListener("click", ()=> {
 	if (navigator.clipboard) {
 		// 使用 Clipboard API 将文本复制到剪切板
 		navigator.clipboard.writeText(shareUrl).then(() => {
-		  alert('内容已复制到剪切板！');
+		  alert('分享链接已复制到剪切板！');
 		}).catch((err) => {
 		  alert('复制失败: ' + err);
 		});
@@ -560,7 +560,7 @@ appNodes.shareBtn.addEventListener("click", ()=> {
 		textArea.select();
 		document.execCommand('copy');
 		document.body.removeChild(textArea);
-		alert('内容已复制到剪切板！');
+		alert('分享链接已复制到剪切板！');
 	  }
 })
 appNodes.settingsBtn.addEventListener("click", () => toggleMenu());
