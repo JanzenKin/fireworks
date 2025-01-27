@@ -352,12 +352,12 @@ const Stage = (function StageFactory(window, document, Ticker) {
 		this.dispatchEvent("pointer" + type, evt);
 	};
 
-	document.addEventListener("mousedown", Stage.mouseHandler);
-	document.addEventListener("mousemove", Stage.mouseHandler);
-	document.addEventListener("mouseup", Stage.mouseHandler);
-	document.addEventListener("touchstart", Stage.touchHandler);
-	document.addEventListener("touchmove", Stage.touchHandler);
-	document.addEventListener("touchend", Stage.touchHandler);
-
+	// document.addEventListener("mousedown", Stage.mouseHandler);
+	// document.addEventListener("mousemove", Stage.mouseHandler);
+	// document.addEventListener("mouseup", Stage.mouseHandler);
+	// document.addEventListener("touchstart", Stage.touchHandler);
+	// document.addEventListener("touchmove", Stage.touchHandler);
+	// document.addEventListener("touchend", Stage.touchHandler);
+	
 	return Stage;
 })(window, document, Ticker);

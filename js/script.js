@@ -34,7 +34,7 @@ const GRAVITY = 0.9; //以像素/秒为单位的加速度
 let simSpeed = 1;
 
 function getDefaultScaleFactor() {
-	if (IS_MOBILE) return 0.9;
+	if (IS_MOBILE) return 1;
 	if (IS_HEADER) return 0.75;
 	return 1;
 }
@@ -77,13 +77,7 @@ const trailsStage = new Stage("trails-canvas");
 const mainStage = new Stage("main-canvas");
 const stages = [trailsStage, mainStage];
 
-//随机文字烟花内容
-// const randomWords = ["新年快乐", "心想事成"];
-const randomWords = ["蛇年快乐", "心想事成"];
-const wordDotsMap = {};
-randomWords.forEach((word) => {
-	wordDotsMap[word] = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", "90px");
-});
+
 
 // 自定义背景
 document.addEventListener("DOMContentLoaded", function () {
@@ -124,6 +118,13 @@ fscreen.addEventListener("fullscreenchange", () => {
 	store.setState({ fullscreen: isFullscreen() });
 });
 
+let randomWords = ["蛇年快乐", "心想事成"]// 文字烟花(默认值)
+const params = new URLSearchParams(window.location.search); 
+if(params.size > 0){
+	randomWords = decodeURIComponent(params.get("text")).split('|').map(t=> t.trim())
+	document.querySelector('.controls').classList.add('hide');
+}
+
 // 简单的状态容器
 const store = {
 	_listeners: new Set(),
@@ -143,17 +144,18 @@ const store = {
 		//在呈现时，并在更改时解析。
 		config: {
 			quality: String(IS_HIGH_END_DEVICE ? QUALITY_HIGH : QUALITY_NORMAL), // will be mirrored to a global variable named `quality` in `configDidUpdate`, for perf.
+			text: randomWords.join('|'),
 			shell: "Random",
 			size: IS_DESKTOP
 				? "3" // Desktop default
 				: IS_HEADER
 				? "1.2" //配置文件头默认值(不必是int)
-				: "2", //手机默认
+				: "3", //手机默认
 			wordShell: true, //文字烟花 默认为开启 若不开启可修改为false
 			autoLaunch: true, //自动发射烟花
 			finale: true, //同时放更多烟花
 			skyLighting: SKY_LIGHT_NORMAL + "",
-			hideControls: IS_HEADER,
+			// hideControls: false,
 			longExposure: false,
 			scaleFactor: getDefaultScaleFactor(),
 		},
@@ -213,6 +215,19 @@ const store = {
 			if (sizeInt >= 0 && sizeInt <= 4) {
 				this.state.config.size = String(sizeInt);
 			}
+		}
+		const params = new URLSearchParams(window.location.search);
+		if(params.size > 0){
+			const config = this.state.config;
+			config.quality = params.get("quality");
+			config.shell = params.get("shell");
+			config.size = params.get("size");
+			config.wordShell = params.get("wordShell") == 'true'? true: false;
+			config.autoLaunch = params.get("autoLaunch") == 'true'? true: false;
+			config.finale = params.get("finale") == 'true'? true: false;
+			config.skyLighting = params.get("skyLighting");
+			config.longExposure = params.get("longExposure") == 'true'? true: false;
+			config.scaleFactor = parseFloat(params.get("scaleFactor"));
 		}
 	},
 
@@ -311,9 +326,14 @@ const shellSizeSelector = () => +store.state.config.size;
 const finaleSelector = () => store.state.config.finale;
 const skyLightingSelector = () => +store.state.config.skyLighting;
 const scaleFactorSelector = () => store.state.config.scaleFactor;
-
+const shellTextSelector = () => store.state.config.text;
+const storeConfig = () => store.state.config;
 // Help Content
 const helpContent = {
+	shellText: {
+		header: "烟花名称",
+		body: "输入美好的祝福，格式“蛇年呈瑞|愿君心想皆成”,分割符为“|”。",	
+	},
 	shellType: {
 		header: "烟花类型",
 		body: "你要放的烟花的类型，选择“随机（Random）”可以获得非常好的体验！",
@@ -346,10 +366,10 @@ const helpContent = {
 		header: "同时放更多的烟花",
 		body: "可以在同一时间自动放出更多的烟花（但需要开启先开启“自动放烟花”）。",
 	},
-	hideControls: {
-		header: "隐藏控制按钮",
-		body: "隐藏屏幕顶部的按钮。如果你要截图，或者需要一个无缝的体验，你就可以将按钮隐藏，隐藏按钮后你仍然可以在右上角打开设置。",
-	},
+	// hideControls: {
+	// 	header: "隐藏控制按钮",
+	// 	body: "隐藏屏幕顶部的按钮。如果你要截图，或者需要一个无缝的体验，你就可以将按钮隐藏，隐藏按钮后你仍然可以在右上角打开设置。",
+	// },
 	fullscreen: {
 		header: "全屏",
 		body: "切换至全屏模式",
@@ -361,6 +381,7 @@ const helpContent = {
 };
 
 const nodeKeyToHelpKey = {
+	shellTextLabel: "shellText",
 	shellTypeLabel: "shellType",
 	shellSizeLabel: "shellSize",
 	qualityLabel: "quality",
@@ -369,7 +390,7 @@ const nodeKeyToHelpKey = {
 	wordShellLabel: "wordShell",
 	autoLaunchLabel: "autoLaunch",
 	finaleModeLabel: "finaleMode",
-	hideControlsLabel: "hideControls",
+	// hideControlsLabel: "hideControls",
 	fullscreenLabel: "fullscreen",
 	longExposureLabel: "longExposure",
 };
@@ -385,6 +406,11 @@ const appNodes = {
 	pauseBtnSVG: ".pause-btn use",
 	soundBtn: ".sound-btn",
 	soundBtnSVG: ".sound-btn use",
+	settingsBtn: ".settings-btn",
+	shareBtn: ".share-btn",
+	closeMenuBtn: ".close-menu-btn",
+	shellText: ".shell-text", //烟花文字
+	shellTextLabel: ".shell-text-label",
 	shellType: ".shell-type",
 	shellTypeLabel: ".shell-type-label",
 	shellSize: ".shell-size", //烟花大小
@@ -402,8 +428,8 @@ const appNodes = {
 	finaleModeFormOption: ".form-option--finale-mode",
 	finaleMode: ".finale-mode",
 	finaleModeLabel: ".finale-mode-label",
-	hideControls: ".hide-controls",
-	hideControlsLabel: ".hide-controls-label",
+	// hideControls: ".hide-controls",
+	// hideControlsLabel: ".hide-controls-label",
 	fullscreenFormOption: ".form-option--fullscreen",
 	fullscreen: ".fullscreen",
 	fullscreenLabel: ".fullscreen-label",
@@ -430,17 +456,17 @@ if (!fullscreenEnabled()) {
 
 //第一次渲染是在状态机 init()中调用的
 function renderApp(state) {
-	const pauseBtnIcon = `#icon-${state.paused ? "play" : "pause"}`;
-	const soundBtnIcon = `#icon-sound-${soundEnabledSelector() ? "on" : "off"}`;
-	appNodes.pauseBtnSVG.setAttribute("href", pauseBtnIcon);
-	appNodes.pauseBtnSVG.setAttribute("xlink:href", pauseBtnIcon);
-	appNodes.soundBtnSVG.setAttribute("href", soundBtnIcon);
-	appNodes.soundBtnSVG.setAttribute("xlink:href", soundBtnIcon);
-	appNodes.controls.classList.toggle("hide", state.menuOpen || state.config.hideControls);
+	// const pauseBtnIcon = `#icon-${state.paused ? "play" : "pause"}`;
+	// const soundBtnIcon = `#icon-sound-${soundEnabledSelector() ? "on" : "off"}`;
+	// appNodes.pauseBtnSVG.setAttribute("href", pauseBtnIcon);
+	// appNodes.pauseBtnSVG.setAttribute("xlink:href", pauseBtnIcon);
+	// appNodes.soundBtnSVG.setAttribute("href", soundBtnIcon);
+	// appNodes.soundBtnSVG.setAttribute("xlink:href", soundBtnIcon);
+	// appNodes.controls.classList.toggle("hide", state.menuOpen || state.config.hideControls);
 	appNodes.canvasContainer.classList.toggle("blur", state.menuOpen);
 	appNodes.menu.classList.toggle("hide", !state.menuOpen);
 	appNodes.finaleModeFormOption.style.opacity = state.config.autoLaunch ? 1 : 0.32;
-
+	appNodes.shellText.value = state.config.text;
 	appNodes.quality.value = state.config.quality;
 	appNodes.shellType.value = state.config.shell;
 	appNodes.shellSize.value = state.config.size;
@@ -448,7 +474,7 @@ function renderApp(state) {
 	appNodes.autoLaunch.checked = state.config.autoLaunch;
 	appNodes.finaleMode.checked = state.config.finale;
 	appNodes.skyLighting.value = state.config.skyLighting;
-	appNodes.hideControls.checked = state.config.hideControls;
+	// appNodes.hideControls.checked = state.config.hideControls;
 	appNodes.fullscreen.checked = state.fullscreen;
 	appNodes.longExposure.checked = state.config.longExposure;
 	appNodes.scaleFactor.value = state.config.scaleFactor.toFixed(2);
@@ -484,6 +510,7 @@ store.subscribe(handleStateChange);
 function getConfigFromDOM() {
 	return {
 		quality: appNodes.quality.value,
+		text: appNodes.shellText.value,
 		shell: appNodes.shellType.value,
 		size: appNodes.shellSize.value,
 		wordShell: appNodes.wordShell.checked,
@@ -491,14 +518,46 @@ function getConfigFromDOM() {
 		finale: appNodes.finaleMode.checked,
 		skyLighting: appNodes.skyLighting.value,
 		longExposure: appNodes.longExposure.checked,
-		hideControls: appNodes.hideControls.checked,
+		// hideControls: appNodes.hideControls.checked,
 		// Store value as number.
 		scaleFactor: parseFloat(appNodes.scaleFactor.value),
 	};
 }
 
+
+// 修改文字烟花内容
+function settingShellText(){
+	//随机文字烟花内容
+	randomWords = shellTextSelector().split('|').map(t=> t.trim());
+	const wordDotsMap = {};
+	randomWords.forEach((word) => {
+		wordDotsMap[word] = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", "70px");
+	});
+}
 const updateConfigNoEvent = () => updateConfig();
+appNodes.shareBtn.addEventListener("click", ()=> {
+	const url = window.location.href;
+	let shareUrl = url.split('index.html')[0] + 'index.html?';
+	// 配置信息
+	const config = storeConfig();
+	Object.keys(config).forEach((key) => {
+		if(key == 'text') shareUrl += `${key}=${encodeURIComponent(config[key])}&`;
+		else shareUrl += `${key}=${config[key]}&`;
+	})
+	shareUrl = shareUrl.slice(0, shareUrl.length - 1);
+	navigator.clipboard.writeText(shareUrl).then(() => {
+		alert('分享链接已经生成并保存到剪切板！');
+	}).catch((err) => {
+		alert('复制失败: ' + err);
+	});
+})
+appNodes.settingsBtn.addEventListener("click", () => toggleMenu());
+appNodes.closeMenuBtn.addEventListener("click", () => toggleMenu(false));
 appNodes.quality.addEventListener("input", updateConfigNoEvent);
+appNodes.shellText.addEventListener("blur", ()=>{
+	updateConfigNoEvent()
+	settingShellText()
+});
 appNodes.shellType.addEventListener("input", updateConfigNoEvent);
 appNodes.shellSize.addEventListener("input", updateConfigNoEvent);
 appNodes.wordShell.addEventListener("click", () => setTimeout(updateConfig, 0));
@@ -506,7 +565,7 @@ appNodes.autoLaunch.addEventListener("click", () => setTimeout(updateConfig, 0))
 appNodes.finaleMode.addEventListener("click", () => setTimeout(updateConfig, 0));
 appNodes.skyLighting.addEventListener("input", updateConfigNoEvent);
 appNodes.longExposure.addEventListener("click", () => setTimeout(updateConfig, 0));
-appNodes.hideControls.addEventListener("click", () => setTimeout(updateConfig, 0));
+// appNodes.hideControls.addEventListener("click", () => setTimeout(updateConfig, 0));
 appNodes.fullscreen.addEventListener("click", () => setTimeout(toggleFullscreen, 0));
 // Changing scaleFactor requires triggering resize handling code as well.
 appNodes.scaleFactor.addEventListener("input", () => {
@@ -2166,7 +2225,7 @@ class Shell {
 		}
 
 		if (!this.disableWordd && store.state.config.wordShell) {
-			if (Math.random() < 0.1) {
+			if (Math.random() < 0.3) {
 				if (Math.random() < 0.5) {
 					createWordBurst(randomWord(), dotStarFactory, x, y);
 				}
